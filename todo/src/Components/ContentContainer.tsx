@@ -1,30 +1,50 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import { Button, Stack, Container, Form, InputGroup } from 'react-bootstrap';
 import ItemList from './ItemList';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import fetchItemList from '../Apis/FetchItem';
+import addItems from '../Apis/AddItems';
 import { useState } from 'react';
+import updateItems from '../Apis/UpdateItems';
 
 const ContentContainer = () => {
     const [item, setItem] = useState<string>('');
     const [buttonState, setButtonState] = useState<boolean>(true);
-    const [addItem, setAddItem] = useState<string[]>([]);
-    const [updateIndex, setUpdateIndex] = useState<number>(0);
+    const [updateIndex, setUpdateIndex] = useState<string>('');
+
+    const AddItemMutation = useMutation(addItems);
+    const UpdateItemMutation = useMutation(updateItems);
 
     const setItems = (event: any): any => {
         setItem(event.target.value);
     };
 
-    const AddItem = () => {
+    const { data, refetch } = useQuery(['item'], fetchItemList);
+
+    const AddItem = async () => {
         if (!item) return;
-        setAddItem([item, ...addItem]);
+        await AddItemMutation.mutateAsync(item);
         setItem('');
+        refetch();
     };
 
-    const updateItem = (): void => {
-        console.log(' console.log()', updateIndex, addItem);
-        addItem.splice(updateIndex, 1, item);
-        setAddItem([...addItem]);
+    const updateItem = async () => {
+        const data = { sItemName: item, sId: updateIndex };
+        await UpdateItemMutation.mutateAsync(data);
         setButtonState(true);
-        setItem('')
-        // setAddItem[updateItem.index](updatedItem.item)
+        setItem('');
+        refetch();
+    };
+
+    const handlekeyevent = (event: any) => {
+        if (event.keyCode === 13 && buttonState) {
+            console.log('kaam kar raha hai');
+            return AddItem();
+        }
+
+        if (event.keyCode === 13 && !buttonState) {
+            return updateItem();
+        }
     };
 
     return (
@@ -45,33 +65,31 @@ const ContentContainer = () => {
                         aria-describedby='basic-addon1'
                         value={item}
                         onChange={setItems}
+                        onKeyDown={handlekeyevent}
                     />
                 </InputGroup>
                 {buttonState ? (
+                
                     <Button variant='primary' size='sm' onClick={AddItem}>
-                        {' '}
-                        Add Item{' '}
+                        Add Item
                     </Button>
                 ) : (
                     <Button variant='warning' size='sm' onClick={updateItem}>
-                        {' '}
-                        Update Item{' '}
+                        Update Item
                     </Button>
                 )}
             </Stack>
             {}
             <Stack gap={3} className='col-md-auto'>
-                {addItem.map((items, index) => (
+                {data?.map((items, index) => (
                     <ItemList
                         key={index}
-                        item={items}
-                        addItem={addItem}
-                        setAddItem={setAddItem}
-                        index={index}
-                        items={item}
+                        index={items._id}
+                        item={items.sItemName}
                         setItems={setItem}
                         setButtonState={setButtonState}
                         setUpdateIndex={setUpdateIndex}
+                        refetch={refetch}
                     />
                 ))}
             </Stack>

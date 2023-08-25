@@ -1,30 +1,38 @@
 import { ItemListProps } from './Types/Types';
-import { Button } from 'react-bootstrap';
+import { Button, Stack } from 'react-bootstrap';
+import { useMutation } from '@tanstack/react-query';
+import DeleteItem from './../Apis/DeleteITem';
 
 const ItemList = (props: ItemListProps) => {
     console.log(typeof props.index);
+
+    const mutation = useMutation(DeleteItem);
 
     const setCurrentItemTOInputText = (): any => {
         props.setItems(props.item);
         props.setButtonState(false);
         props.setUpdateIndex(props.index);
-        console.log('dsdmasdklaskldj');
+        // console.log('dsdmasdklaskldj');
     };
 
-    const removeItemFromList = () => {
-        console.log('Item', props.addItem);
-        props.addItem.splice(props.index, 1);
-        props.setAddItem([...props.addItem])
-        console.log('removedItem', props.addItem);
-    }
+    const removeItemFromList = async () => {
+        await mutation.mutateAsync(props.index);
+        props.refetch();
+    };
 
     return (
-        <div className='bg-light'>
-            <h3 className='text-center'>{props.item}</h3>
-            <div className='text-center'>
-                <Button variant='danger' className='me-3' onClick={()=>{
-                     removeItemFromList()
-                }}>
+        <Stack direction='horizontal' className='card bg-light py-3 pe-3'>
+            <div className='col-11'>
+                <h3 className='text-center'>{props.item}</h3>
+            </div>
+            <div className='col-1 mx-auto'>
+                <Button
+                    variant='danger'
+                    className=' me-3 mx-auto'
+                    onClick={() => {
+                        removeItemFromList();
+                    }}
+                >
                     <i className='bi bi-trash'></i>
                 </Button>
                 <Button
@@ -36,7 +44,7 @@ const ItemList = (props: ItemListProps) => {
                     <i className='bi bi-pencil-square'></i>
                 </Button>
             </div>
-        </div>
+        </Stack>
     );
 };
 export default ItemList;
